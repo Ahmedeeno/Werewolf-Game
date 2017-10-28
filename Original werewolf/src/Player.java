@@ -1,61 +1,57 @@
+/* a player class that will hold the player 
+ *information and execute the actions for their roles
+ */
 public class Player
 {
-	private String name;
-	private Role role;
+	private String playerName;
+	private Role playerRole;
+	private boolean alive = true;
+	private Vote vote = new Vote();
 	private int serial;
-	boolean isAlive = true;
-	
-	public Player(String roleTitle, String name, int serial)
+	public Player(String playerName, int serial, String playerRole)
 	{
+		this.playerName = playerName;
 		this.serial = serial;
-		this.name = name;
-		switch (roleTitle)
+		switch (playerRole)
 		{
-		case "Werewolf":
-			role = new Werewolf();
-			break;
-			
-		case "Villager":
-			role = new Villager();
-			break;
-			
-		case "Seer":
-			role = new Seer();
-			break;
-			
+			case "Villager":
+				this.playerRole = new Villager();
+				break;
+			case "Werewolf":
+				this.playerRole = new Werewolf();
+				break;
+			case "Seer":
+				this.playerRole = new Seer();
+				break;
 		}
 	}
-	public void setName(String name)
+	public int takeAction(Player [] players)
 	{
-		this.name=name;
+		return playerRole.takeAction(players, getSerial());
 	}
-	/*
-	public void setName(String name)
+	public void vote(Player[] players)
 	{
-		this.name = name;
-	}
-	*/
-	public String getName()
-	{
-		return name;
-	}
-	
-	public String getRoleTitle()
-	{
-		return role.getRoleTitle();
-	}
-	
-	public void takeAction(Player [] players)
-	{
-		role.takeAction(players,serial);
+		vote.vote(players, serial);
 	}
 	public int getSerial()
 	{
-		return serial;
+		return this.serial;
 	}
-	
-	public int vote(Player[] players)
+	public boolean isAlive()
 	{
-		return role.vote(players,serial);
+		return alive;
+	}
+	public String getPlayerName()
+	{
+		return playerName;
+	}
+	public void setAlive(boolean x)
+	{
+		this.alive = x;
+	}
+	public String getPlayerRole()
+	{
+		return playerRole.getRoleTitle();
 	}
 }
+	

@@ -1,195 +1,170 @@
-import java.util.Random;
 import javax.swing.JOptionPane;
 public class Moderator
 {
-	private static String roles[];
-	private static Random random = new Random();
-	private static int numberOfPlayers;
-	private static Player [] players;
-	private static int numberOfWerewolves;
-	private static int numberOfSeers;
-	private static int numberOfVillagers;
-	private static String victim;
-	
-	public Moderator(int numberOfPlayers)
+	private int aliveWerewolvesCount =0;
+	private int aliveVillagersCount =0;
+	private int playersCount;
+	private Player players[];
+	String victim; 
+	int victimSerial;
+	public Moderator(int playersCount)
 	{
-		Moderator.numberOfPlayers = numberOfPlayers;
+		this.playersCount = playersCount;
+	}
+	public int getPlayersCount()
+	{
+		return this.playersCount;
 	}
 	
 	public void prepareToStart()
 	{
-		players = new Player[numberOfPlayers];
-		
-		figureOutNumberOfRoles();
-		createRoles();
-		shuffleRoles();
-		createPlayers();
-	}
-	
-	public void createRoles()
-	{
-		roles = new String[players.length];
-		int n = 0;
-		for (int m = 1; m <= Moderator.numberOfWerewolves ; m++,n++ )
-		{			
-			roles[n] = "Werewolf"; 
-		}
-		for (int m = 1; m <= Moderator.numberOfSeers ; m++, n++ )
-		{			
-			roles[n] = "Seer"; 
-		}
-		for (int m = 1; m <= Moderator.numberOfVillagers ; m++,n++ )
-		{			
-			roles[n] = "Villager"; 
-		}
-		/*
-		for (int x = 0 ; x < players.length ; x++)
+		players = new Player[getPlayersCount()];
+		String []roles = Role.prepareRoles(playersCount);
+		for (int n = 0 ; n < playersCount ; n++)
 		{
-			JOptionPane.showMessageDialog(null,players[x].getRoleTitle());
+			players[n] = new Player(JOptionPane.showInputDialog(null, " input player # " + (n+1) +  "'s name") ,n, roles[n]);
 		}
-		*/
+		Vote vote = new Vote(playersCount);
 	}
 	
-	public void shuffleRoles()
-	{
-		int tempNumber;
-		String tempRole = null; 
-		for (int n =0; n < roles.length ; n++)
-		{
-			tempNumber = random.nextInt(roles.length);
-			tempRole = roles[n];
-			roles[n] = roles[tempNumber];
-			roles[tempNumber] = tempRole;
-		}	
-	}
-	
-	public void createPlayers()
+	public void start()
 	{
 		for (int n = 0 ; n < players.length; n++)
 		{
-			players[n] = new Player (roles[n], JOptionPane.showInputDialog("What is the player #" +(n+1) + "'s name ?"),n);
-			//JOptionPane.showMessageDialog(null, roles[n]);
+			JOptionPane.showMessageDialog(null, "If you are " + players[n].getPlayerName() + ", press OK.");
+			JOptionPane.showMessageDialog(null, players[n].getPlayerName() + "\n You are a " + players[n].getPlayerRole());
 		}
-	}
-	public void figureOutNumberOfRoles()
-	{
-		Moderator.numberOfWerewolves = figureOutNumberOfWerewolves();
-		Moderator.numberOfSeers = figureOutNumberOfSeers();
-		Moderator.numberOfVillagers = figureOutNumberOfVillagers();
-	}
-	public int figureOutNumberOfWerewolves()
-	{
-		final int VILLAGERS_WEREWOLVES_RATIO = 5;
-		int numberOfWerewolves = players.length/VILLAGERS_WEREWOLVES_RATIO;
-		return numberOfWerewolves;
-	}
-	
-	public int figureOutNumberOfSeers()
-	{
-		final int PLAYERS_SEERS_RATIO = 15;
-		int numberOfSeers = random.nextInt(players.length / PLAYERS_SEERS_RATIO +2);
-		return numberOfSeers;
-	}
-	public int figureOutNumberOfVillagers()
-	{
-		return (players.length - (Moderator.numberOfWerewolves + Moderator.numberOfSeers ));
-	}
-	
-	
-	public void startGame()
-	{
-		showRoles();
-		while(!(WerewolvesWin()||(VillagersWin())))
+		while (isContinueGame())
 		{
 			playARound();
 		}
-	}
-	public void showRoles()
-	{
-		for(int n = 0 ; n < players.length ; n++)
+		if(werewolvesWin())
 		{
-			JOptionPane.showMessageDialog(null, "It is " + players[n].getName()+"'s turn\nif you are "+players[n].getName()+", press Enter");
-			JOptionPane.showMessageDialog(null, players[n].getName()+ ", you are a/an " + players[n].getRoleTitle());
-			
+			JOptionPane.showMessageDialog(null,"werewolves team wins");
+		}
+		else if(villagersWin())
+		{
+			JOptionPane.showMessageDialog(null,"villagers team wins");
 		}
 	}
 	
 	public void playARound()
 	{
-		while(!(WerewolvesWin()||VillagersWin()))
+		for (int n = 0 ; n < players.length ; n++)
 		{
-			for (int n = 0 ; n < players.length ; n++)
+			JOptionPane.showMessageDialog(null, "If you are " + players[n].getPlayerName() + ", press OK.");
+
+			if (players[n].isAlive())
 			{
-				if(players[n].isAlive)
+				if(players[n].getPlayerRole().equals("Werewolf"))
 				{
-					JOptionPane.showMessageDialog(null, "It is "+players[n].getName()+"'s turn");
+					victimSerial = players[n].takeAction(players);
+					victim = players[victimSerial].getPlayerName();
+				}
+				else
+				{
 					players[n].takeAction(players);
-					if(WerewolvesWin()||VillagersWin())
-						break;
-				}
-			}
-			if(WerewolvesWin()||VillagersWin())
-				break;
-			for (int n = 0 ; n < players.length ; n++)
-			{
-				if(players[n].isAlive)
-				{
-					JOptionPane.showMessageDialog(null, "It is "+players[n].getName()+"'s turn");
-					JOptionPane.showMessageDialog(null, players[players[n].vote(players)].getName());
 				}
 			}
 		}
-		if(WerewolvesWin())
-			JOptionPane.showMessageDialog(null, "Werewolves team win");
-		else if (VillagersWin())
-			JOptionPane.showMessageDialog(null,  "Villagers team win");
+		if (victimSerial != -1)
+		{
+			JOptionPane.showMessageDialog(null, victim + " was killed" );
+			players[victimSerial].setAlive(false);
+			victimSerial = -1;
+		}
+		if(!isContinueGame())
+		{
+			return;
+		}
+		for (int n = 0 ; n < players.length ; n++)
+		{
+			if (players[n].isAlive())
+			players[n].vote(players);	
+		}
+		
+		int votesResult = Vote.getMaximumVotes();
+		if (votesResult == -1)
+		{
+			JOptionPane.showMessageDialog(null, "The villagers are confused on who to lynch so they did not lycnh anyone");
+			Vote.resetVotes();
+		}
+		else
+		{	
+			JOptionPane.showMessageDialog(null, "The villagers decided to lynch "+players[Vote.getMaximumVotes()].getPlayerName());
+			JOptionPane.showMessageDialog(null, players[Vote.getMaximumVotes()].getPlayerName() + " was lynched.");
+			players[Vote.getMaximumVotes()].setAlive(false);
+			Vote.resetVotes();
+		}
+		
+	}
+	
+	public boolean isContinueGame()
+	{
+		if(werewolvesWin() || villagersWin())
+		{
+			if (werewolvesWin())
+			{
+				return false;
+			}
+			else if (villagersWin())
+			{
+				return false;
+			}
+			else
+				return true;
+		}
+		else
+		{
+			return true;
+		}
+	}
+	public boolean werewolvesWin()
+	{
+		countPlayers();
+		
+		if (aliveWerewolvesCount >= aliveVillagersCount) 
+		{
+			return true;
+		}
+		else
+			{
+				return false;
+			}
+	}
+	public boolean villagersWin()
+	{
+		countPlayers();
+		if(aliveWerewolvesCount == 0)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	public void countPlayers()
+	{
+		aliveWerewolvesCount=0;
+		aliveVillagersCount =0;
 				
+				for (int n = 0 ; n < players.length ; n++)
+				{
+					if(players[n].getPlayerRole().equals("Werewolf"))
+					{
+						if (players[n].isAlive())
+						{
+							aliveWerewolvesCount++;
+						}
+					}
+					else
+					{
+						if (players[n].isAlive())
+						{
+							aliveVillagersCount++;
+						}
+					}
+				}
 	}
-	
-	public boolean WerewolvesWin()
-	{
-		int WerewolvesAlive=0;
-		int VillagersAlive=0;
-		for (int n =0; n < players.length ; n++)
-		{
-			if (players[n].getRoleTitle()== "Werewolf")
-				WerewolvesAlive++;
-			else if (players[n].isAlive)
-				VillagersAlive++;
-		}
-		if (WerewolvesAlive >= VillagersAlive)
-			return true;
-		else
-			return false;
-	}
-	
-	public boolean VillagersWin()
-	{
-		int WerewolvesAlive = 0 ;
-		for (int n =0; n < players.length ; n++)
-		{
-		if (players[n].getRoleTitle()== "Werewolf")
-			WerewolvesAlive++;
-		}
-		if (WerewolvesAlive == 0)
-			return true;
-		else
-			return false;
-	}
-	/*
-	public void assignNames()
-	{
-		int n = 1;
-		//JOptionPane.showMessageDialog(null,players.length);
-		for (Player p : players)
-		{
-			p.setName(JOptionPane.showInputDialog(null,"what is the player# "+n+"'s name "));
-			n++;
-		}
-		for (Player p : players)
-			{
-				JOptionPane.showMessageDialog(null,p.getName());
-			}
-	}
-	*/
 }

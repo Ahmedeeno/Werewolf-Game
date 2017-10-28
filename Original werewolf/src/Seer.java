@@ -1,12 +1,14 @@
+/* A seer class. A subclass of Role
+ * 
+ */
 public class Seer extends Role
 {
 	public Seer()
 	{
-		setRoleTitle("Seer");		
+		setRoleTitle("Seer");
 	}
-	
-	public void takeAction(Player[]players,int serial)
+	public int takeAction(Player[] players, int serial)
 	{
-		
+		return 0;
 	}
 }

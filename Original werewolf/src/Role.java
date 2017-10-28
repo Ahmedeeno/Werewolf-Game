@@ -1,48 +1,57 @@
 import javax.swing.JOptionPane;
+import java.util.Random;
 
+/* a Role class to hold the role info and actions to be done by the role
+ * 
+ */
 abstract public class Role
 {
-	int choice; 
+	private static String[] roles;
 	private String roleTitle;
-	
-	public void setRoleTitle(String roleName)
+	public void setRoleTitle(String roleTitle)
 	{
-		this.roleTitle = roleName;
+		this.roleTitle = roleTitle;
 	}
-	
 	public String getRoleTitle()
 	{
-		return this.roleTitle;
+		return roleTitle;
 	}
 	
-	public int vote(Player[] players, int serial)
+	public static String[] prepareRoles(int playersCount)
 	{
-		int vote=0; 
-		String list = "\n";
-		for (int n = 0, m=1 ; n < players.length; n++)
+		roles = new String[playersCount];
+		for (int n = 0 ; n < playersCount ; n++)
 		{
-			if ((players[n].isAlive)&&(players[n].getSerial()!= serial))
+			if ((n+1) % 5 == 0)
 			{
-				list += m + "- " + players[n].getName()+"\n";
-				m++;
+				roles[n]= "Werewolf";
+			}
+			else
+			{
+				roles[n] = "Villager";
 			}
 		}
-		choice = Integer.parseInt(JOptionPane.showInputDialog(null,"who do you want to vote on?"+ list));
-		for (int n = 0 , m = 1 ; n< players.length; n++)
-		{
-			if ((players[n].isAlive)&&(players[n].getSerial()!= serial))
-			{
-				if (choice == m)
-				{
-					vote = n;
-				}
-				m++;
-			}
-		}
-		//JOptionPane.showMessageDialog(null, players[vote].getName());
-		return vote;
 		
+		shuffleRoles(roles);
+		return roles;
 	}
-	abstract public void takeAction(Player players[], int serial);
+	
+	public static String[] shuffleRoles(String[] roles)
+	{
+		Random random = new Random();
+		String tempRole = null;
+		int rand;
+		for (int n = 0 ; n < roles.length ; n++)
+		{
+			rand = random.nextInt(roles.length);
+			tempRole = roles[n];
+			roles[n] = roles[rand];
+			roles[rand] = tempRole;
+		}
+		return roles;
+	}
+	
+	
+	abstract public int takeAction(Player[] players, int serial);
 	
 }
